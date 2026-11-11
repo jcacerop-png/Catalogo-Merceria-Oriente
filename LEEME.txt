@@ -1,0 +1,29 @@
+MERCERÍA DE ORIENTE · CATÁLOGO PÚBLICO (lo que ve la clienta, versión 6)
+
+Archivos de esta carpeta:
+  index.html            Entrada (fotos de fondo, logo y botón Entrar) + catálogo
+  catalogo.js           Lógica del catálogo, la entrada y el carrito
+  comun.js              Compartido: categorías de productos y funciones comunes
+  config.js             Configuración (lleva tus datos de Supabase)
+  styles.css            Diseño (negro y amarillo, tema claro y oscuro)
+  logo.png              Logo
+
+Antes de subirlo:
+1. Base de datos: corre supabase-merceria-v3.sql (el mismo que va en el panel) en el
+   SQL Editor de Supabase, una sola vez. Sin este paso la etiqueta "Nuevo" no aparece
+   y las categorías nuevas no se pueden guardar.
+2. NO subas config.js: conserva el tuyo, que ya tiene tus datos de Supabase.
+3. Sube index.html, catalogo.js, comun.js (obligatorio: ahí están las categorías), styles.css y logo.png a la misma carpeta
+   (GitHub o Netlify), reemplazando los anteriores.
+
+Novedades:
+- Carrito fijo abajo a la derecha. Se llena con "+ Agregar" y no se abre solo.
+  Desde el carrito la clienta envía su pedido por WhatsApp o pide asesoría antes de comprar.
+- Botón "Compartir" en cada producto.
+- La búsqueda encuentra por nombre, tipo y color, sin importar las tildes.
+- Filtro "Solo disponibles".
+- Categorías con la foto de un producto de cada una, incluidas las nuevas (Repuestos, Cierres, Cordones, Tijeras, Crochet, Macutos, Accesorios).
+- Etiqueta "Nuevo" durante 7 días desde la publicación del producto.
+
+Las fotos de fondo de la entrada se editan desde la pestaña Carrusel del panel.
+Los productos se suben desde el panel de administración.
