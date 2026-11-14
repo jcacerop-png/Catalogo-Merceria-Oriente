@@ -140,25 +140,66 @@ document.addEventListener("keydown", (e) => {
 aplicarTema(localStorage.getItem("mo_tema") === "claro" ? "claro" : "oscuro");
 
 /* =========================================================
-   Categorías de productos. La clave se guarda en la base de datos;
-   el texto es el nombre que ve la clienta.
-   Para agregar una: añade la clave aquí y en la restricción
-   de supabase-merceria-v3.sql (sección de categorías).
+   Categorías de productos. Se cargan desde la base de datos
+   (tabla tipos): el panel las ve todas y el catálogo público
+   solo las visibles. fijarCategorias() las deja en orden.
    ========================================================= */
-const CATEGORIAS = {
-  maquina: "Máquinas de coser",
-  hilo: "Hilos",
-  tela: "Telas",
-  bisuteria: "Bisutería",
-  otro: "Otros",
-  acce_met: "Accesorios metálicos",
-  acce_plast: "Accesorios plásticos",
-  cierre: "Cierres",
-  cordon: "Cordones",
-  tijera: "Tijeras",
-  crochet_neg: "Crochet negro",
-  crochet_blanc: "Crochet blanco",
-  macuto_neg: "Macutos negros",
-  macuto_blanc: "Macutos blancos",
-  repuesto: "Repuestos",
-};
+let CATEGORIAS = {};
+
+// Recibe filas { codigo, nombre, orden } y deja CATEGORIAS en ese mismo orden
+function fijarCategorias(filas) {
+  const ordenadas = [...(filas || [])].sort((a, b) =>
+    (Number(a.orden) || 0) - (Number(b.orden) || 0)
+    || String(a.nombre || a.codigo).localeCompare(String(b.nombre || b.codigo), "es"));
+  CATEGORIAS = {};
+  ordenadas.forEach(f => { CATEGORIAS[f.codigo] = f.nombre || f.codigo; });
+}
+
+// Texto sin tildes ni mayúsculas, para buscar y comparar
+const normaTexto = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/* Reordenar con el mouse (arrastrar y soltar). En el celular se usan las flechas ▲ ▼.
+   contenedor: elemento que tiene las filas · item: selector de cada fila (con data-id)
+   agarre: selector de la parte que se arrastra (si no se indica, arrastra la fila completa)
+   alSoltar(ids): recibe los ids en su nuevo orden, solo si el orden cambió */
+function habilitarArrastre(contenedor, { item, agarre = null, alSoltar }) {
+  let arrastrando = null;
+  let ordenInicial = [];
+  const ids = () => [...contenedor.querySelectorAll(item)].map(f => f.dataset.id);
+
+  contenedor.addEventListener("dragstart", (e) => {
+    const origen = agarre ? e.target.closest(agarre) : e.target;
+    const fila = origen && origen.closest(item);
+    if (!fila || !contenedor.contains(fila)) return e.preventDefault();
+    arrastrando = fila;
+    ordenInicial = ids();
+    fila.classList.add("arrastrando");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", fila.dataset.id || "");
+  });
+
+  contenedor.addEventListener("dragover", (e) => {
+    if (!arrastrando) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const destino = e.target.closest(item);
+    if (!destino || destino === arrastrando || !contenedor.contains(destino)) return;
+    const lista = destino.parentNode;
+    if (lista !== arrastrando.parentNode) return; // solo se reordena dentro de su misma lista
+    const r = destino.getBoundingClientRect();
+    const despues = e.clientY > r.top + r.height / 2;
+    lista.insertBefore(arrastrando, despues ? destino.nextSibling : destino);
+  });
+
+  contenedor.addEventListener("drop", (e) => {
+    if (arrastrando) e.preventDefault();
+  });
+
+  contenedor.addEventListener("dragend", () => {
+    if (!arrastrando) return;
+    arrastrando.classList.remove("arrastrando");
+    arrastrando = null;
+    const nuevoOrden = ids();
+    if (nuevoOrden.join("|") !== ordenInicial.join("|")) alSoltar(nuevoOrden);
+  });
+}

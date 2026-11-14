@@ -531,3 +531,163 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color:
   .card-prod:hover, .prod-adm:hover, .pick:hover:not(:disabled), .car-item:hover, .foto-pf:hover, .cat:hover, .fab:hover { transform: none; }
   .card-prod:hover .foto img, .prod-adm:hover .foto img { transform: none; }
 }
+
+/* ======================================================
+   v6 · Panel: tipografía Arial y texto amarillo (solo admin)
+   La vista pública conserva su tipografía y sus colores.
+   ====================================================== */
+body.panel { --ink: #FACC15; }
+:root[data-theme="claro"] body.panel { --ink: #6B4E00; }
+body.panel, body.panel * { font-family: Arial, Helvetica, sans-serif; }
+
+/* ======================================================
+   v6 · Categorías, inventario y arrastrar para ordenar
+   ====================================================== */
+.cat-lista { list-style: none; margin: 12px 0 14px; padding: 0; display: grid; gap: 8px; }
+.cat-fila {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 10px;
+  transition: border-color .2s, opacity .2s;
+}
+.cat-fila:hover { border-color: var(--acc); }
+.cat-fila.oculta { opacity: .55; }
+.cat-fila.arrastrando { opacity: .45; border-color: var(--acc); }
+.agarre { cursor: grab; font-size: 20px; line-height: 1; color: var(--muted); padding: 4px 6px; user-select: none; touch-action: none; }
+.agarre:active { cursor: grabbing; }
+.cat-nombre { flex: 1 1 180px; min-width: 0; }
+.cat-n { flex: 0 0 auto; white-space: nowrap; }
+.car-item[draggable="true"] { cursor: grab; }
+.car-item.arrastrando { opacity: .45; }
+.pill-stock {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  border: 1.5px solid currentColor; white-space: nowrap;
+}
+.pill-stock.ok { color: var(--ok); }
+.pill-stock.bajo { color: #D97706; }
+.pill-stock.sin { color: var(--malo); }
+#invTabla { overflow-x: auto; margin-top: 12px; }
+.tabla-inv { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+.tabla-inv th, .tabla-inv td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tabla-inv th {
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  font-weight: 700; white-space: nowrap;
+}
+.tabla-inv tr.oculto { opacity: .55; }
+.tabla-inv td.small { font-size: 12.5px; color: var(--muted); }
+
+/* ======================================================
+   v6 · Banner del catálogo (público)
+   ====================================================== */
+.hero {
+  position: relative; isolation: isolate; overflow: hidden; max-width: none;
+  margin-top: 18px; padding: 34px 26px 28px; border-radius: 24px; border: 1.5px solid var(--line);
+  background:
+    radial-gradient(640px 260px at 92% -10%, rgba(250, 204, 21, .26), transparent 62%),
+    radial-gradient(520px 240px at -8% 110%, rgba(250, 204, 21, .14), transparent 60%),
+    linear-gradient(160deg, var(--card), var(--bg));
+  box-shadow: var(--sombra-alta);
+}
+.hero-deco {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(250, 204, 21, .32) 1px, transparent 1.6px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(115deg, transparent 35%, #000 100%);
+  mask-image: linear-gradient(115deg, transparent 35%, #000 100%);
+}
+.hero h1 { font-size: clamp(32px, 5.4vw, 60px); line-height: 1.02; }
+.hero h1 em { font-style: italic; background: none; color: var(--acc); padding: 0; border-radius: 0; }
+:root[data-theme="claro"] .hero h1 em { color: #8A6100; }
+.hero .eyebrow { margin-bottom: 14px; }
+
+/* ======================================================
+   v6 · Escritorio (pantallas de 1100 px o más)
+   ====================================================== */
+@media (min-width: 1100px) {
+  .wrap { max-width: 1280px; }
+  .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+  .grid-adm { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .car-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hero { padding: 44px 44px 36px; }
+}
+@media (min-width: 1500px) {
+  .wrap { max-width: 1400px; }
+  .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* ======================================================
+   v7b · Menú lateral del panel (PC) y barra inferior (celular)
+   ====================================================== */
+body.panel #app { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+body.panel #app[hidden] { display: none; }
+body.panel .lateral {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 18px; padding: 22px 14px;
+  background: var(--card); border-right: 1.5px solid var(--line);
+}
+body.panel .lateral .brand { padding: 2px 8px 6px; }
+body.panel .lateral .tabs { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 4px; overflow: visible; }
+body.panel .lateral .tabs button {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 14px;
+  border: 0; border-radius: 12px; font: inherit; font-size: 14.5px; font-weight: 700;
+  color: var(--muted); background: transparent; cursor: pointer; text-align: left;
+}
+body.panel .lateral .tabs button:hover { color: var(--ink); background: rgba(250, 204, 21, .08); }
+body.panel .lateral .tabs button.on { background: var(--acc); color: #0D0D0D; }
+body.panel .lateral .tabs svg {
+  width: 20px; height: 20px; flex: 0 0 20px; fill: none; stroke: currentColor;
+  stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+body.panel .lateral .acciones { flex-direction: column; align-items: stretch; gap: 8px; margin-top: auto; }
+body.panel .lateral .acciones .btn { width: 100%; }
+body.panel .lateral .quien { font-size: 13px; color: var(--muted); padding: 0 8px; }
+body.panel .panel-main { min-width: 0; }
+
+@media (max-width: 760px) {
+  body.panel #app { display: block; }
+  body.panel .lateral {
+    position: sticky; top: 0; height: auto; overflow: visible; z-index: 20;
+    flex-direction: row; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 14px; border-right: 0; border-bottom: 1.5px solid var(--line); background: var(--bg);
+  }
+  body.panel .lateral .tabs { display: none; }
+  body.panel .lateral .acciones { flex-direction: row; margin-top: 0; gap: 6px; }
+  body.panel .lateral .acciones .btn { width: auto; }
+  body.panel .lateral .quien { display: none; }
+  body.panel .tabbar { overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+  body.panel .tabbar::-webkit-scrollbar { display: none; }
+  body.panel .tabbar button { flex: 0 0 auto; min-width: 68px; }
+}
+
+/* ======================================================
+   v7b · Ventas Cashea
+   ====================================================== */
+.cashea-cabecera { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+#casheaTabla { overflow-x: auto; margin-top: 12px; }
+#casheaTabla .tabla-inv { min-width: 900px; }
+.tabla-inv tr.anulada td { opacity: .5; }
+.acc-fila { display: flex; gap: 6px; flex-wrap: wrap; }
+.acc-fila .anular { color: var(--malo); }
+.pill-estado {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  border: 1.5px solid currentColor; white-space: nowrap;
+}
+.pill-estado.pendiente { color: #D97706; }
+.pill-estado.cobrada { color: var(--ok); }
+.pill-estado.anulada { color: var(--muted); }
+.form-cashea h2 { margin: 0 0 14px; }
+.form-cashea .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-cashea label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; }
+.usd-calc { margin: 14px 0 6px; color: var(--muted); font-size: 14px; }
+.usd-calc strong { color: var(--ink); font-size: 16px; }
+@media (max-width: 560px) { .form-cashea .grid-form { grid-template-columns: 1fr; } }
+
+/* v7b · ajustes para celular */
+@media (max-width: 760px) {
+  body.panel .lateral .marca small { display: none; }
+  body.panel .lateral .acciones { flex-wrap: nowrap; }
+  body.panel .lateral .acciones .btn { padding: 8px 10px; font-size: 12.5px; white-space: nowrap; }
+  body.panel .toolbar .seg { width: 100%; }
+  body.panel .toolbar .seg button { flex: 1 1 0; padding: 8px 6px; font-size: 13px; white-space: nowrap; }
+  body.panel .toolbar .input { flex: 1 1 100%; }
+}

@@ -15,8 +15,8 @@
 </head>
 <body>
 
-<!-- ============ ENTRADA: fotos de fondo, logo y botón Entrar (solo se ve al abrir la página) ============ -->
-<section id="entrada" class="entrada">
+<!-- ============ ENTRADA: fotos de fondo y logo. Se entra tocando la pantalla (solo se ve al abrir la página) ============ -->
+<section id="entrada" class="entrada" role="button" tabindex="0" aria-label="Entrar al catálogo">
   <div id="entradaFondo" class="fondo-carrusel" aria-hidden="true"></div>
   <div class="velo" aria-hidden="true"></div>
   <button class="btn ghost sm tema-flotante" data-tema aria-label="Cambiar tema">☀ Tema claro</button>
@@ -27,7 +27,7 @@
     <h1>Bienvenido a <em>Mercería de Oriente</em></h1>
   </div>
 
-  <a class="entrada-entrar" href="#catalogo" id="btnEntrar">Entrar</a>
+  <p class="entrada-pista" aria-hidden="true">Toca la pantalla para entrar</p>
 </section>
 
 <!-- ============ ENCABEZADO ============ -->
@@ -47,6 +47,7 @@
 <main class="wrap" id="catalogo">
 
   <section class="hero">
+    <div class="hero-deco" aria-hidden="true"></div>
     <span class="eyebrow">Catálogo en línea</span>
     <h1>Todo para <em>coser y crear</em></h1>
     <p class="hero-lead">Máquinas de coser, hilos, telas y bisutería para tus proyectos. Precios en dólares y disponibilidad actualizada: si aparece como Disponible, lo tenemos.</p>

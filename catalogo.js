@@ -4,14 +4,16 @@
    "catalogo_publico" (productos sin costos ni cantidades exactas)
    y "carrusel" (fotos activas que se muestran de fondo en la entrada).
    El pedido (carrito) se guarda solo en el navegador de la clienta.
-   Al pulsar "Entrar" la pantalla de bienvenida se oculta en esta visita.
+   Al tocar la pantalla de bienvenida se entra al catálogo en esta visita.
+   Las categorías (tabla tipos) vienen de la vista "categorias_publicas":
+   solo se muestran las visibles, y sus productos con ellas.
    ========================================================= */
 
 const CLAVE_PEDIDO = "mo_pedido";
 const MAX_CANT = 99;
 const DIAS_NUEVO = 7;
 
-const pub = { items: [], fotos: [], tipo: "todos", q: "", orden: "destacados", soloDisp: false };
+const pub = { items: [], fotos: [], tipo: "todos", q: "", orden: "destacados", soloDisp: false, categoriasOk: false };
 let rotFondo = null;
 let entradaCerrada = false;
 let pedido = [];   // [{ id, variante, cantidad }]. Precio y foto se leen del catálogo actual.
@@ -94,6 +96,10 @@ function pintarFondo() {
 }
 
 function entrarAlCatalogo(e) {
+  // El botón de tema de la pantalla de bienvenida no debe hacer entrar al catálogo
+  if (e.target.closest && e.target.closest("[data-tema]")) return;
+  // Con teclado: solo Enter o la barra espaciadora
+  if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
   e.preventDefault();
   entradaCerrada = true;
   detenerRotaciones();
@@ -516,9 +522,10 @@ document.addEventListener("keydown", (e) => {
 
 /* ---------- Datos y tiempo real ---------- */
 async function cargar() {
-  const [cat, car] = await Promise.all([
+  const [cat, car, cats] = await Promise.all([
     sb.from("catalogo_publico").select("*"),
     sb.from("carrusel").select("url").eq("activo", true).order("orden", { ascending: true }),
+    sb.from("categorias_publicas").select("*"),
   ]);
   const aviso = $("#avisoCarga");
   if (cat.error) {
@@ -526,9 +533,13 @@ async function cargar() {
     aviso.hidden = false;
     return;
   }
-  pub.items = cat.data || [];
+  // Solo se muestran los productos de categorías visibles
+  pub.categoriasOk = !cats.error;
+  if (!cats.error) fijarCategorias(cats.data || []);
+  pub.items = (cat.data || []).filter(p => !pub.categoriasOk || CATEGORIAS[p.tipo]);
   pub.fotos = car.error ? [] : (car.data || []).map(f => urlSegura(f.url)).filter(Boolean);
-  aviso.hidden = true;
+  aviso.textContent = "No pudimos cargar las categorías. Intenta de nuevo en un momento.";
+  aviso.hidden = !cats.error;
   podarPedido();
   pintarFondo();
   render();
@@ -540,7 +551,9 @@ function iniciar() {
   $("#buscar").addEventListener("input", e => { pub.q = e.target.value; render(); });
   $("#orden").addEventListener("change", e => { pub.orden = e.target.value; render(); });
   $("#btnWa").href = `https://wa.me/${CONFIG.WHATSAPP}`;
-  $("#btnEntrar").addEventListener("click", entrarAlCatalogo);
+  const entrada = $("#entrada");
+  entrada.addEventListener("click", entrarAlCatalogo);
+  entrada.addEventListener("keydown", entrarAlCatalogo);
 
   render();
   actualizarFab();
