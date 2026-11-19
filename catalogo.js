@@ -3,8 +3,9 @@
    Catálogo público de Mercería Oriente.
    Lee las vistas y tablas públicas de Supabase:
    - "catalogo_publico" (productos publicados sin costos ni cantidades exactas)
-   - "carrusel" (fotos activas que se muestran de fondo en la entrada)
+   - "carrusel" (fotos activas que se muestran de fondo en el banner)
    - "categorias_publicas" (categorías visibles ordenadas desde el panel)
+   - "configuracion_catalogo" (imagen Hero Full-Bleed del pie de página)
    El pedido (carrito) se guarda en el navegador de la clienta.
    ========================================================= */
 
@@ -15,6 +16,7 @@ const DIAS_NUEVO = 7;
 const pub = {
   items: [],
   fotos: [],
+  heroPieUrl: "",
   tipo: "todos",
   q: "",
   orden: "destacados",
@@ -23,7 +25,6 @@ const pub = {
   categoriasOk: false,
 };
 let rotFondo = null;
-let entradaCerrada = false;
 let pedido = [];   // [{ id, variante, cantidad }]. Precio y foto se leen del catálogo actual.
 let detalle = null; // { id, variante } del producto abierto en la ficha
 let vista = null;   // "pedido" o "detalle": qué hay dentro del panel que está abierto
@@ -31,7 +32,7 @@ let vista = null;   // "pedido" o "detalle": qué hay dentro del panel que está
 const urlSegura = u => (/^https?:\/\//i.test(String(u || "")) ? String(u) : "");
 const fotosDe = p => (Array.isArray(p.fotos) ? p.fotos.map(urlSegura).filter(Boolean) : []);
 // Busca sin importar mayúsculas ni tildes: "azul", "Azúl" y "AZUL" son lo mismo
-const norma = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const norma = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 function estadoDe(p) {
   const vars = Array.isArray(p.variantes) ? p.variantes : [];
@@ -59,8 +60,8 @@ function textoBusqueda(p) {
   return norma(`${p.nombre} ${p.codigo || ""} ${p.descripcion || ""} ${CATEGORIAS[p.tipo] || ""} ${colores} ${usos}`);
 }
 
-/* ---------- Rotación de fotos (fondo de la entrada) ---------- */
-function iniciarRotacion(imgs, ms, alCambiar) {
+/* ---------- Rotación suave de fotos en el banner principal y pie Hero ---------- */
+function iniciarRotacion(imgs, ms) {
   let i = 0;
   let timer = null;
 
@@ -68,7 +69,6 @@ function iniciarRotacion(imgs, ms, alCambiar) {
     if (!imgs.length) return;
     i = (n + imgs.length) % imgs.length;
     imgs.forEach((im, k) => im.classList.toggle("on", k === i));
-    if (alCambiar) alCambiar(i);
   };
   const parar = () => clearInterval(timer);
   const arrancar = () => {
@@ -78,126 +78,42 @@ function iniciarRotacion(imgs, ms, alCambiar) {
 
   pintar(0);
   arrancar();
-  return {
-    ir: n => { pintar(n); arrancar(); },
-    actual: () => i,
-    parar,
-    arrancar,
-  };
+  return { parar, arrancar };
 }
 
-function detenerRotaciones() {
+function pintarFondoHero() {
+  const fondo = $("#heroFondo");
+  if (!fondo) return;
   if (rotFondo) rotFondo.parar();
   rotFondo = null;
+  const fotos = pub.fotos;
+  fondo.innerHTML = fotos.map((u, i) => `<img src="${esc(u)}" alt="" class="${i === 0 ? "on" : ""}" loading="lazy">`).join("");
+  if (fotos.length > 1) {
+    rotFondo = iniciarRotacion($$("img", fondo), 6500);
+  }
 }
 
-function pintarFondo() {
-  if (entradaCerrada) return;
-  const fotos = pub.fotos;
-  const fondo = $("#entradaFondo");
-  const puntos = $("#entradaPuntos");
-  if (!fondo) return;
-
-  detenerRotaciones();
-  fondo.innerHTML = fotos.map((u, i) => `<img src="${esc(u)}" alt="" class="${i === 0 ? "on" : ""}">`).join("");
-  if (puntos) {
-    puntos.innerHTML = fotos.length > 1
-      ? fotos.map((_, i) => `<button type="button" class="entrada-dot ${i === 0 ? "on" : ""}" data-fondo-idx="${i}" aria-label="Foto de portada ${i + 1}"></button>`).join("")
-      : "";
+function pintarPieHero() {
+  const bg = $("#pieHeroBg");
+  const pie = $("#pieHero");
+  if (!bg || !pie) return;
+  const url = urlSegura(pub.heroPieUrl) || pub.fotos[0] || "";
+  if (url) {
+    bg.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
+    pie.classList.add("con-imagen");
+  } else {
+    bg.style.backgroundImage = "";
+    pie.classList.remove("con-imagen");
   }
-  if (!fotos.length) return;
-
-  rotFondo = iniciarRotacion($$("img", fondo), 6000, idx => {
-    $$("#entradaPuntos .entrada-dot").forEach((b, k) => b.classList.toggle("on", k === idx));
-  });
 }
 
 function categoriasConProductos() {
   return Object.entries(CATEGORIAS).map(([k, nombre]) => {
     const lista = pub.items.filter(p => p.tipo === k);
+    const disp = lista.filter(p => estadoDe(p).ok).length;
     const portada = lista.map(p => fotosDe(p)[0]).find(Boolean) || "";
-    return { k, nombre, n: lista.length, portada };
+    return { k, nombre, n: lista.length, disp, portada };
   }).filter(c => c.n > 0);
-}
-
-function pintarOpcionesEntrada() {
-  const cats = categoriasConProductos();
-  const disp = pub.items.filter(p => estadoDe(p).ok).length;
-  const resumen = $("#entradaResumen");
-  if (resumen && pub.items.length) {
-    resumen.textContent = `${pub.items.length} productos publicados · ${disp} disponibles · ${cats.length} categorías en línea`;
-  }
-  const wrap = $("#entradaCatsWrap");
-  const cont = $("#entradaCats");
-  if (wrap && cont) {
-    wrap.hidden = cats.length === 0;
-    cont.innerHTML = cats.slice(0, 10).map(c =>
-      `<button type="button" class="entrada-cat-chip" data-entrar-cat="${esc(c.k)}">${esc(c.nombre)} <span>${c.n}</span></button>`
-    ).join("");
-  }
-}
-
-function cerrarPortada() {
-  entradaCerrada = true;
-  detenerRotaciones();
-  $("#entrada").hidden = true;
-  $("#fab").hidden = false;
-}
-
-function abrirPortada() {
-  entradaCerrada = false;
-  $("#entrada").hidden = false;
-  pintarFondo();
-  pintarOpcionesEntrada();
-  window.scrollTo({ top: 0, behavior: "auto" });
-}
-
-function entrarConOpcion(modo, cat = null) {
-  cerrarPortada();
-  if (cat) {
-    pub.tipo = cat;
-    pub.soloDisp = false;
-    pub.vistaProd = "todos";
-    render();
-    const sec = $("#productosSec");
-    if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
-  }
-  if (modo === "disponibles") {
-    pub.tipo = "todos";
-    pub.soloDisp = true;
-    pub.vistaProd = "disponibles";
-    render();
-    const sec = $("#productosSec");
-    if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
-  }
-  if (modo === "categorias") {
-    render();
-    const sec = $("#categorias");
-    if (sec && !sec.hidden) sec.scrollIntoView({ behavior: "smooth", block: "start" });
-    else window.scrollTo({ top: 0, behavior: "auto" });
-    return;
-  }
-  pub.tipo = "todos";
-  pub.soloDisp = false;
-  pub.vistaProd = "todos";
-  render();
-  window.scrollTo({ top: 0, behavior: "auto" });
-}
-
-function entrarAlCatalogo(e) {
-  // No cerrar si se tocó el botón de tema, WhatsApp, puntos del carrusel o un botón con acción propia
-  if (e.target.closest && (
-    e.target.closest("[data-tema]") ||
-    e.target.closest("[data-fondo-idx]") ||
-    e.target.closest("[data-entrar-modo]") ||
-    e.target.closest("[data-entrar-cat]") ||
-    e.target.closest("#entradaWa")
-  )) return;
-  if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
-  e.preventDefault();
-  entrarConOpcion("todos");
 }
 
 /* ---------- Pedido (carrito) ---------- */
@@ -257,11 +173,13 @@ function actualizarFab() {
   if (subPed) {
     subPed.textContent = n > 0 ? `Tienes ${n} artículo(s) en tu pedido` : "Envía tu lista directo por WhatsApp";
   }
-  $("#fab").setAttribute("aria-label", `Ver mi pedido (${n} artículo(s))`);
+  const fab = $("#fab");
+  if (fab) fab.setAttribute("aria-label", `Ver mi pedido (${n} artículo(s))`);
 }
 
 function pulsoCarrito() {
   const f = $("#fab");
+  if (!f) return;
   f.classList.remove("pulso");
   void f.offsetWidth; // reinicia la animación
   f.classList.add("pulso");
@@ -389,17 +307,41 @@ async function compartir(id) {
   window.open(`https://wa.me/?text=${encodeURIComponent(`${texto}\n${url}`)}`, "_blank", "noopener");
 }
 
-/* ---------- Categorías con foto ---------- */
+/* ---------- Categorías en Bento Grid Editorial ---------- */
+function claseBentoCat(i, total) {
+  if (i === 0) return "bento-featured";
+  if (i === 1 && total >= 3) return "bento-wide";
+  if (i > 4 && i % 5 === 0) return "bento-wide";
+  return "";
+}
+
 function pintarCategorias() {
   const cats = categoriasConProductos();
-  $("#categorias").hidden = cats.length === 0;
+  const sec = $("#categorias");
+  if (!sec) return;
+  sec.hidden = cats.length === 0;
   const btnTodas = $("#btnVerTodasCats");
   if (btnTodas) btnTodas.hidden = pub.tipo === "todos";
-  $("#catGrid").innerHTML = cats.map(c => `
-    <button type="button" class="cat ${pub.tipo === c.k ? "on" : ""}" data-cat="${esc(c.k)}" aria-pressed="${pub.tipo === c.k}">
-      <span class="cat-foto">${c.portada ? `<img src="${esc(c.portada)}" alt="" loading="lazy">` : ""}</span>
-      <span class="cat-txt"><b>${esc(c.nombre)}</b><small>${c.n} producto(s)</small></span>
-    </button>`).join("");
+  $("#catGrid").innerHTML = cats.map((c, i) => {
+    const activa = pub.tipo === c.k;
+    const tam = claseBentoCat(i, cats.length);
+    const badge = i === 0 ? "Colección destacada" : `${c.n} artículo${c.n === 1 ? "" : "s"}`;
+    return `
+    <button type="button" class="cat bento-cat ${tam} ${activa ? "on" : ""}" data-cat="${esc(c.k)}" aria-pressed="${activa}">
+      <span class="cat-foto">
+        ${c.portada ? `<img src="${esc(c.portada)}" alt="${esc(c.nombre)}" loading="lazy">` : `<span class="cat-placeholder">✦</span>`}
+      </span>
+      <span class="cat-velo" aria-hidden="true"></span>
+      <span class="cat-badge">${esc(badge)}</span>
+      <span class="cat-txt">
+        <span class="cat-info">
+          <b>${esc(c.nombre)}</b>
+          <small>${c.n} producto${c.n === 1 ? "" : "s"} · ${c.disp} disponible${c.disp === 1 ? "" : "s"}</small>
+        </span>
+        <span class="cat-flecha" aria-hidden="true">→</span>
+      </span>
+    </button>`;
+  }).join("");
 }
 
 /* ---------- Lista de productos ---------- */
@@ -431,8 +373,8 @@ function tarjeta(p) {
   const vars = Array.isArray(p.variantes) ? p.variantes : [];
   const usos = Array.isArray(p.usos) ? p.usos.filter(Boolean) : [];
   const subInfo = vars.length > 1
-    ? `${vars.filter(v => v.disponible).length} opción(es)`
-    : (usos[0] ? usos[0] : "");
+    ? `${vars.filter(v => v.disponible).length} opción(es) disponible(s)`
+    : (usos[0] ? usos[0] : (p.descripcion ? p.descripcion : ""));
   return `
   <article class="card-prod" data-id="${esc(p.id)}" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
     <div class="foto">
@@ -442,7 +384,7 @@ function tarjeta(p) {
     <div class="cuerpo">
       <span class="tipo">${esc(CATEGORIAS[p.tipo] || "")}${p.codigo ? ` · ${esc(p.codigo)}` : ""}</span>
       <h3>${esc(p.nombre)}</h3>
-      ${subInfo ? `<small class="card-subinfo">${esc(subInfo)}</small>` : ""}
+      ${subInfo ? `<p class="card-subinfo">${esc(subInfo)}</p>` : ""}
       <div class="fila-precio">
         <strong>${usd(p.precio)}</strong>
         <span class="pill ${e.ok ? "ok" : "agotado"}">${e.txt}</span>
@@ -499,7 +441,6 @@ function render() {
   if (btnLimpiar) btnLimpiar.hidden = !hayFiltroActivo;
 
   pintarCategorias();
-  pintarOpcionesEntrada();
 
   const lista = visibles();
   $("#grid").innerHTML = lista.map(tarjeta).join("");
@@ -623,21 +564,8 @@ function pintarDetalle() {
 document.addEventListener("click", (e) => {
   const t = e.target;
 
-  if (t.closest("#fab") || t.closest("#btnPedidoTop")) return abrirPedido();
-  if (t.closest("[data-volver-inicio]")) return abrirPortada();
+  if (t.closest("#fab") || t.closest("#btnPedidoTop") || t.closest("#btnPedidoPie")) return abrirPedido();
   if (t.closest("#btnLimpiarFiltros") || t.closest("#btnVerTodasCats")) return limpiarFiltros();
-
-  const dotFondo = t.closest("[data-fondo-idx]");
-  if (dotFondo && rotFondo) {
-    rotFondo.ir(Number(dotFondo.dataset.fondoIdx));
-    return;
-  }
-
-  const entrarModo = t.closest("[data-entrar-modo]");
-  if (entrarModo) return entrarConOpcion(entrarModo.dataset.entrarModo);
-
-  const entrarCat = t.closest("[data-entrar-cat]");
-  if (entrarCat) return entrarConOpcion("cat", entrarCat.dataset.entrarCat);
 
   const opcInicio = t.closest("[data-opcion-inicio]");
   if (opcInicio) {
@@ -740,10 +668,11 @@ document.addEventListener("keydown", (e) => {
 
 /* ---------- Datos y tiempo real ---------- */
 async function cargar() {
-  const [cat, car, cats] = await Promise.all([
+  const [cat, car, cats, cfg] = await Promise.all([
     sb.from("catalogo_publico").select("*"),
     sb.from("carrusel").select("url").eq("activo", true).order("orden", { ascending: true }),
     sb.from("categorias_publicas").select("*"),
+    sb.from("configuracion_catalogo").select("clave, valor").eq("clave", "hero_pie_url").maybeSingle(),
   ]);
   const aviso = $("#avisoCarga");
   if (cat.error) {
@@ -756,10 +685,13 @@ async function cargar() {
   if (!cats.error) fijarCategorias(cats.data || []);
   pub.items = (cat.data || []).filter(p => !pub.categoriasOk || CATEGORIAS[p.tipo]);
   pub.fotos = car.error ? [] : (car.data || []).map(f => urlSegura(f.url)).filter(Boolean);
+  pub.heroPieUrl = (!cfg.error && cfg.data && cfg.data.valor) ? urlSegura(cfg.data.valor) : "";
+
   aviso.textContent = "No pudimos cargar las categorías. Intenta de nuevo en un momento.";
   aviso.hidden = !cats.error;
   podarPedido();
-  pintarFondo();
+  pintarFondoHero();
+  pintarPieHero();
   render();
   actualizarFab();
 }
@@ -770,12 +702,11 @@ function iniciar() {
   $("#orden").addEventListener("change", e => { pub.orden = e.target.value; render(); });
   const waUrl = `https://wa.me/${CONFIG.WHATSAPP}`;
   $("#btnWa").href = waUrl;
-  const entradaWa = $("#entradaWa");
-  if (entradaWa) entradaWa.href = waUrl;
-  const entrada = $("#entrada");
-  entrada.addEventListener("click", entrarAlCatalogo);
+  const btnWaPie = $("#btnWaPie");
+  if (btnWaPie) btnWaPie.href = waUrl;
 
   render();
+  pintarPieHero();
   actualizarFab();
 
   if (!CONFIGURADO) {
@@ -786,7 +717,7 @@ function iniciar() {
   }
 
   cargar();
-  // Cuando el panel guarda algo (productos o carrusel), la tabla catalogo_meta cambia y se vuelve a cargar
+  // Cuando el panel guarda algo (productos, carrusel o configuración), la tabla catalogo_meta cambia y se vuelve a cargar
   sb.channel("catalogo-publico")
     .on("postgres_changes", { event: "*", schema: "public", table: "catalogo_meta" }, () => cargar())
     .subscribe();
