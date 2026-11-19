@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0D0D0D">
-  <title>Mercería de Oriente · Catálogo</title>
-  <meta name="description" content="Catálogo de Mercería de Oriente: máquinas de coser, hilos, telas y bisutería. Precios en dólares.">
+  <title>Mercería Oriente · Catálogo</title>
+  <meta name="description" content="Catálogo de Mercería Oriente: máquinas de coser, hilos, telas, cintas y bisutería. Precios en dólares.">
   <link rel="icon" href="logo.png">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; base-uri 'self'; object-src 'none'">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,29 +15,53 @@
 </head>
 <body>
 
-<!-- ============ ENTRADA: fotos de fondo y logo. Se entra tocando la pantalla (solo se ve al abrir la página) ============ -->
-<section id="entrada" class="entrada" role="button" tabindex="0" aria-label="Entrar al catálogo">
+<!-- ============ ENTRADA / INICIO: fotos de fondo de Supabase, logo y opciones rápidas ============ -->
+<section id="entrada" class="entrada" aria-label="Portada de inicio del catálogo">
   <div id="entradaFondo" class="fondo-carrusel" aria-hidden="true"></div>
   <div class="velo" aria-hidden="true"></div>
   <button class="btn ghost sm tema-flotante" data-tema aria-label="Cambiar tema">☀ Tema claro</button>
 
   <div class="entrada-centro">
-    <img class="entrada-logo" src="logo.png" alt="Logo de Mercería de Oriente">
-    <p class="entrada-tag">Máquinas · Hilos · Telas · Bisutería</p>
-    <h1>Bienvenido a <em>Mercería de Oriente</em></h1>
+    <img class="entrada-logo" src="logo.png" alt="Logo de Mercería Oriente">
+    <p class="entrada-tag">Máquinas · Hilos · Telas · Cintas · Bisutería</p>
+    <h1>Bienvenido a <em>Mercería Oriente</em></h1>
+    <p class="entrada-sub" id="entradaResumen">Catálogo en línea conectado en tiempo real · Precios en USD</p>
+
+    <div class="entrada-acciones">
+      <button type="button" class="btn entrada-btn-principal" data-entrar-modo="todos">Ver catálogo completo →</button>
+      <button type="button" class="btn ghost entrada-btn-sec" data-entrar-modo="disponibles">Disponibles ahora</button>
+      <button type="button" class="btn ghost entrada-btn-sec" data-entrar-modo="categorias">Explorar categorías</button>
+      <a class="btn ghost entrada-btn-sec" id="entradaWa" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+    </div>
+
+    <div class="entrada-cats-wrap" id="entradaCatsWrap" hidden>
+      <span class="entrada-cats-titulo">Ir directo a una categoría:</span>
+      <div class="entrada-cats" id="entradaCats"></div>
+    </div>
   </div>
 
-  <p class="entrada-pista" aria-hidden="true">Toca la pantalla para entrar</p>
+  <div class="entrada-pie">
+    <div class="entrada-puntos" id="entradaPuntos"></div>
+    <p class="entrada-pista">Elige una opción o toca cualquier parte para entrar</p>
+  </div>
 </section>
 
 <!-- ============ ENCABEZADO ============ -->
 <header class="top">
   <div class="wrap bar">
     <a class="brand" href="#catalogo">
-      <img class="logo" src="logo.png" alt="Logo de Mercería de Oriente">
-      <span class="marca">Mercería<br><small>de Oriente</small></span>
+      <img class="logo" src="logo.png" alt="Logo de Mercería Oriente">
+      <span class="marca">Mercería<br><small>Oriente</small></span>
     </a>
+    <nav class="nav-top" aria-label="Navegación rápida">
+      <button type="button" class="nav-link" data-volver-inicio>Portada</button>
+      <a class="nav-link" href="#categorias">Categorías</a>
+      <a class="nav-link" href="#productosSec">Productos</a>
+    </nav>
     <div class="acciones">
+      <button type="button" class="btn ghost sm" id="btnPedidoTop" aria-label="Ver mi pedido">
+        🛒 Mi pedido <span class="badge-top" id="topPedidoNum" hidden>0</span>
+      </button>
       <button class="btn ghost sm" data-tema aria-label="Cambiar tema">☀ Tema claro</button>
       <a class="btn sm" id="btnWa" target="_blank" rel="noopener">WhatsApp</a>
     </div>
@@ -48,43 +72,103 @@
 
   <section class="hero">
     <div class="hero-deco" aria-hidden="true"></div>
-    <span class="eyebrow">Catálogo en línea</span>
-    <h1>Todo para <em>coser y crear</em></h1>
-    <p class="hero-lead">Máquinas de coser, hilos, telas y bisutería para tus proyectos. Precios en dólares y disponibilidad actualizada: si aparece como Disponible, lo tenemos.</p>
-    <ul class="hero-datos">
-      <li id="heroConteo" hidden><b id="heroTotal">0</b> productos publicados</li>
-      <li><b>USD</b> precios en dólares</li>
-      <li><b>WhatsApp</b> para consultar y comprar</li>
-    </ul>
+    <div class="hero-grid">
+      <div class="hero-col-texto">
+        <span class="eyebrow">Catálogo en línea · Mercería Oriente</span>
+        <h1>Todo para <em>coser, bordar y crear</em></h1>
+        <p class="hero-lead">Máquinas de coser, hilos, cintas, elásticos, cierres y bisutería para tus proyectos. Precios en dólares y disponibilidad actualizada en vivo.</p>
+        <ul class="hero-datos">
+          <li id="heroConteo" hidden><b id="heroTotal">0</b> productos publicados</li>
+          <li id="heroDispItem" hidden><b id="heroDisp">0</b> disponibles</li>
+          <li id="heroCatItem" hidden><b id="heroCats">0</b> categorías</li>
+          <li><b>USD</b> precios al detal</li>
+        </ul>
+      </div>
+
+      <!-- Opciones interactivas de inicio -->
+      <div class="hero-opciones" aria-label="Opciones rápidas del catálogo">
+        <button type="button" class="hero-opcion" data-opcion-inicio="todos">
+          <span class="hero-opcion-ico">✦</span>
+          <div>
+            <strong>Ver todo el catálogo</strong>
+            <small id="optSubTodos">Explorar todos los artículos</small>
+          </div>
+        </button>
+        <button type="button" class="hero-opcion" data-opcion-inicio="disponibles">
+          <span class="hero-opcion-ico">✔</span>
+          <div>
+            <strong>Disponibles para entrega</strong>
+            <small id="optSubDisp">Artículos con existencia inmediata</small>
+          </div>
+        </button>
+        <button type="button" class="hero-opcion" data-opcion-inicio="categorias">
+          <span class="hero-opcion-ico">❖</span>
+          <div>
+            <strong>Explorar por categoría</strong>
+            <small id="optSubCats">Cintas, hilos, agujas, cierres y más</small>
+          </div>
+        </button>
+        <button type="button" class="hero-opcion" data-opcion-inicio="pedido">
+          <span class="hero-opcion-ico">🛒</span>
+          <div>
+            <strong>Armar y enviar mi pedido</strong>
+            <small id="optSubPedido">Envía tu lista directo por WhatsApp</small>
+          </div>
+        </button>
+      </div>
+    </div>
   </section>
 
-  <!-- Categorías con foto (aparecen solo cuando hay productos en la categoría) -->
+  <!-- Categorías con foto (aparecen cuando hay productos en la categoría) -->
   <section class="categorias" id="categorias" hidden>
-    <div class="cabecera-seccion"><h2>Explora por categoría</h2></div>
+    <div class="cabecera-seccion">
+      <div>
+        <span class="eyebrow">Secciones</span>
+        <h2>Explora por categoría</h2>
+      </div>
+      <button type="button" class="btn ghost sm" id="btnVerTodasCats" hidden>Ver todas las categorías</button>
+    </div>
     <div class="cat-grid" id="catGrid"></div>
   </section>
 
-  <div class="toolbar">
-    <input id="buscar" class="input" type="search" placeholder="Busca por nombre, tipo o color…" autocomplete="off">
-    <select id="orden" aria-label="Ordenar">
-      <option value="destacados">Destacados</option>
-      <option value="precio-asc">Precio: menor a mayor</option>
-      <option value="precio-desc">Precio: mayor a menor</option>
-      <option value="nombre">Nombre A–Z</option>
-    </select>
-  </div>
+  <!-- Sección de productos y buscador -->
+  <section id="productosSec" class="productos-sec">
+    <div class="cabecera-seccion" style="margin-top:24px">
+      <div>
+        <span class="eyebrow">Catálogo</span>
+        <h2 id="tituloSeccionProd">Todos los productos</h2>
+      </div>
+      <div class="filtros-rapidos" id="filtrosRapidos">
+        <button type="button" class="chip sm on" data-vista-prod="todos">Todos</button>
+        <button type="button" class="chip sm" data-vista-prod="disponibles">Disponibles</button>
+        <button type="button" class="chip sm" data-vista-prod="destacados" id="btnFiltroDest" hidden>★ Destacados</button>
+        <button type="button" class="chip sm" data-vista-prod="nuevos" id="btnFiltroNuevos" hidden>Nuevos</button>
+      </div>
+    </div>
 
-  <div class="chips" id="chips"></div>
-  <p class="muted small" id="conteo"></p>
+    <div class="toolbar">
+      <input id="buscar" class="input" type="search" placeholder="Busca por nombre, código, categoría, uso o color…" autocomplete="off">
+      <select id="orden" aria-label="Ordenar">
+        <option value="destacados">Destacados primero</option>
+        <option value="precio-asc">Precio: menor a mayor</option>
+        <option value="precio-desc">Precio: mayor a menor</option>
+        <option value="nombre">Nombre A–Z</option>
+      </select>
+      <button type="button" class="btn ghost sm" id="btnLimpiarFiltros" hidden>Limpiar filtros ✕</button>
+    </div>
 
-  <p class="error" id="avisoCarga" hidden></p>
-  <div class="grid" id="grid"></div>
-  <p class="vacio" id="vacio" hidden></p>
+    <div class="chips" id="chips"></div>
+    <p class="muted small" id="conteo"></p>
+
+    <p class="error" id="avisoCarga" hidden></p>
+    <div class="grid" id="grid"></div>
+    <p class="vacio" id="vacio" hidden></p>
+  </section>
 </main>
 
 <footer class="pie">
   <div class="wrap">
-    © Mercería de Oriente · WhatsApp +58 424-8901496 · Precios en dólares (USD)
+    © Mercería Oriente · WhatsApp +58 424-8901496 · Precios en dólares (USD)
   </div>
 </footer>
 

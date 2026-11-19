@@ -1,4 +1,4 @@
-MERCERÍA DE ORIENTE · CATÁLOGO PÚBLICO (lo que ve la clienta, versión 7)
+MERCERÍA ORIENTE · CATÁLOGO PÚBLICO (lo que ve la clienta, versión 8)
 
 Archivos de esta carpeta:
   index.html            Entrada (fotos de fondo y logo) + banner y catálogo
