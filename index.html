@@ -22,15 +22,38 @@
     </a>
     <nav class="nav-top" aria-label="Navegación rápida">
       <a class="nav-link" href="#catalogo">Inicio</a>
-      <a class="nav-link" href="#categorias">Categorías</a>
+      <div class="nav-mega-wrap" id="navMegaWrap">
+        <a class="nav-link nav-mega-trigger" href="#categorias" id="btnMegaCats" aria-haspopup="true" aria-expanded="false">
+          Categorías <span class="mega-caret" aria-hidden="true">▾</span>
+        </a>
+        <!-- Mega Menu on hover: 3 columnas con iconos y descripciones + tarjeta destacada con imagen a la derecha -->
+        <div class="mega-menu" id="megaMenu" role="region" aria-label="Categorías de Mercería Oriente">
+          <div class="mega-grid">
+            <div class="mega-main">
+              <div class="mega-cab">
+                <div>
+                  <span class="eyebrow">Departamentos · Mercería Oriente</span>
+                  <h3>Explora nuestras categorías</h3>
+                </div>
+                <button type="button" class="btn ghost sm" data-mega-todas>Ver todo el catálogo →</button>
+              </div>
+              <div class="mega-cols" id="megaCols"></div>
+            </div>
+            <aside class="mega-featured" id="megaFeatured" aria-label="Destacado de Mercería Oriente"></aside>
+          </div>
+        </div>
+      </div>
       <a class="nav-link" href="#productosSec">Productos</a>
       <a class="nav-link" href="#pieHero">Contacto</a>
     </nav>
     <div class="acciones">
+      <button type="button" class="btn ghost sm btn-cats-movil" id="btnCatsMovil" aria-label="Categorías">
+        ❖ Categorías
+      </button>
       <button type="button" class="btn ghost sm" id="btnPedidoTop" aria-label="Ver mi pedido">
         🛒 Mi pedido <span class="badge-top" id="topPedidoNum" hidden>0</span>
       </button>
-      <button class="btn ghost sm" data-tema aria-label="Cambiar tema">☀ Tema claro</button>
+      <button type="button" class="btn ghost sm" data-tema aria-label="Cambiar tema">☀ Tema claro</button>
       <a class="btn sm" id="btnWa" target="_blank" rel="noopener">WhatsApp</a>
     </div>
   </div>
@@ -117,13 +140,19 @@
     </div>
 
     <div class="toolbar">
-      <input id="buscar" class="input" type="search" placeholder="Busca por nombre, código, categoría, uso o color…" autocomplete="off">
+      <input id="buscar" class="input" type="search" placeholder="Busca por nombre, código, categoría, medida, uso o color…" autocomplete="off">
+      <button type="button" class="btn ghost sm toolbar-bs-btn" id="btnToolbarCats" aria-label="Filtrar por categoría">
+        ❖ <span id="lblCatActiva">Categorías</span> ▾
+      </button>
       <select id="orden" aria-label="Ordenar">
         <option value="destacados">Destacados primero</option>
         <option value="precio-asc">Precio: menor a mayor</option>
         <option value="precio-desc">Precio: mayor a menor</option>
         <option value="nombre">Nombre A–Z</option>
       </select>
+      <button type="button" class="btn ghost sm toolbar-bs-btn solo-movil-orden" id="btnOrdenMovil" aria-label="Ordenar productos">
+        ⇅ <span id="lblOrdenMovil">Ordenar</span> ▾
+      </button>
       <button type="button" class="btn ghost sm" id="btnLimpiarFiltros" hidden>Limpiar filtros ✕</button>
     </div>
 
@@ -166,6 +195,24 @@
 </button>
 
 <div id="modal" class="modal" hidden><div class="sheet" role="dialog" aria-modal="true"></div></div>
+
+<!-- Mobile Bottom Sheet (drag handle, rounded top corners 24px, list of options, swipe down to close) -->
+<div id="bottomSheetModal" class="bs-backdrop" hidden>
+  <div class="bs-sheet" id="bottomSheet" role="dialog" aria-modal="true" aria-labelledby="bsTitulo">
+    <div class="bs-drag-area" id="bsDragArea" title="Desliza hacia abajo para cerrar">
+      <span class="bs-handle" aria-hidden="true"></span>
+    </div>
+    <div class="bs-head">
+      <div>
+        <span class="eyebrow" id="bsEyebrow">Mercería Oriente</span>
+        <h3 id="bsTitulo">Opciones</h3>
+      </div>
+      <button type="button" class="x cerrar-bs" data-cerrar-bs aria-label="Cerrar">✕</button>
+    </div>
+    <div class="bs-body" id="bsBody"></div>
+  </div>
+</div>
+
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
